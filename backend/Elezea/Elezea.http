@@ -1,0 +1,6 @@
+@Elezea_HostAddress = http://localhost:5058
+
+GET {{Elezea_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
