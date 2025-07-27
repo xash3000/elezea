@@ -10,7 +10,7 @@ public class Submission
     public int Id { get; set; }
 
     [Required]
-    public required string Description { get; set; }
+    public required string UserDescription { get; set; }
     public float? Score { get; set; }
     public string? Feedback { get; set; }
     public DateTime CreatedAt { get; set; }
