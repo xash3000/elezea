@@ -13,7 +13,7 @@ public class Submission
     public required string UserDescription { get; set; }
     public float? Score { get; set; }
     public string? Feedback { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [ForeignKey("Image")]
     public int ImageId { get; set; }
