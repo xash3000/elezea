@@ -11,6 +11,10 @@ public class Submission
 
     [Required]
     public required string UserDescription { get; set; }
+
+    [Required]
+    public bool Evaluated { get; set; }
+
     public float? Score { get; set; }
     public string? Feedback { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
