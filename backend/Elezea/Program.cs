@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Elezea.Models;
 using Elezea;
+using Elezea.DTOs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,5 +21,27 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+var api = app.MapGroup("/api");
+
+var random = new Random();
+
+api.MapGet("images/random", async (AppDbContext context, string langCode = "en") =>
+{
+    return await context.Descriptions
+    .Include(d => d.Image)
+    .Include(d => d.Language)
+    .Where(d => d.Language.Code == langCode)
+    .OrderBy(d => EF.Functions.Random())
+    .Select(d => new ImageDto
+    {
+        Id = d.Image.Id,
+        Url = d.Image.Url,
+        DescriptionText = d.Text,
+        LanguageCode = d.Language.Code
+    })
+    .FirstOrDefaultAsync();
+
+});
 
 app.Run();
