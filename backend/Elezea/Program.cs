@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Elezea.Models;
 using Elezea;
 using Elezea.DTOs;
 
@@ -23,8 +22,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 var api = app.MapGroup("/api");
-
-var random = new Random();
 
 api.MapGet("images/random", async (AppDbContext context, string langCode = "en") =>
 {

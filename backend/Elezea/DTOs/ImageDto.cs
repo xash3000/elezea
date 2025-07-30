@@ -1,5 +1,3 @@
-using System;
-
 namespace Elezea.DTOs;
 
 public class ImageDto
