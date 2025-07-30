@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Elezea;
 using Elezea.DTOs;
+using Microsoft.AspNetCore.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,7 @@ var api = app.MapGroup("/api");
 
 api.MapGet("images/random", async (AppDbContext context, string langCode = "en") =>
 {
-    return await context.Descriptions
+    var image = await context.Descriptions
     .Include(d => d.Image)
     .Include(d => d.Language)
     .Where(d => d.Language.Code == langCode)
@@ -39,6 +40,14 @@ api.MapGet("images/random", async (AppDbContext context, string langCode = "en")
     })
     .FirstOrDefaultAsync();
 
-});
+    if (image == null)
+    {
+        return Results.NotFound(new { Message = $"No images found for language code {langCode}" });
+    }
+
+    return Results.Ok(image);
+}).Produces<ImageDto>(StatusCodes.Status200OK)
+.Produces(StatusCodes.Status404NotFound)
+.WithOpenApi();
 
 app.Run();
