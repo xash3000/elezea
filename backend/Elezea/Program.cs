@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Elezea;
 using Elezea.DTOs;
 using Elezea.Services;
-using Microsoft.AspNetCore.OpenApi;
+using Elezea.Models;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +15,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-// Register LLM services
 builder.Services.AddSingleton<ISubmissionQueue, SubmissionQueue>();
 builder.Services.AddScoped<ILlmEvaluationService, LlmEvaluationService>();
 builder.Services.AddHostedService<LlmEvaluationBackgroundService>();
@@ -57,33 +56,24 @@ api.MapGet("images/random", async (AppDbContext context, string langCode = "en")
 .Produces(StatusCodes.Status404NotFound)
 .WithOpenApi();
 
-api.MapPost("images/submit", async (AppDbContext context, SubmitImageDto request, ISubmissionQueue submissionQueue) =>
+api.MapPost("images/submit", async (AppDbContext context, SubmitDescriptionDto request, ISubmissionQueue submissionQueue) =>
 {
-    // Validate that the image exists
-    var image = await context.Images.FindAsync(request.ImageId);
-    if (image == null)
+    var data = await context.Descriptions
+        .Include(d => d.Image)
+        .Include(d => d.Language)
+        .Where(d => d.ImageId == request.ImageId && d.Language.Code == request.LangCode)
+        .Select(d => new { d.Image, d.Language })
+        .FirstOrDefaultAsync();
+
+    if (data == null)
     {
-        return Results.BadRequest(new { Message = "Image not found" });
+        return Results.BadRequest(new { Message = "Invalid request: image not found, language not supported, or no reference description available" });
     }
 
-    // Validate that the language exists
-    var language = await context.Languages.FirstOrDefaultAsync(l => l.Code == request.LangCode);
-    if (language == null)
-    {
-        return Results.BadRequest(new { Message = "Language not found" });
-    }
+    var image = data.Image;
+    var language = data.Language;
 
-    // Check if there's a description for this image in the target language
-    var descriptionExists = await context.Descriptions
-        .AnyAsync(d => d.ImageId == request.ImageId && d.LanguageId == language.Id);
-
-    if (!descriptionExists)
-    {
-        return Results.BadRequest(new { Message = "No reference description available for this image in the specified language" });
-    }
-
-    // Create submission
-    var submission = new Elezea.Models.Submission
+    var submission = new Submission
     {
         ImageId = request.ImageId,
         LanguageId = language.Id,
@@ -96,7 +86,6 @@ api.MapPost("images/submit", async (AppDbContext context, SubmitImageDto request
     context.Submissions.Add(submission);
     await context.SaveChangesAsync();
 
-    // Add to processing queue
     await submissionQueue.EnqueueAsync(submission.Id);
 
     return Results.Created($"/api/submission/{submission.Id}/status", new { Id = submission.Id });
@@ -123,7 +112,6 @@ api.MapGet("submission/{id:int}/status", async (AppDbContext context, int id) =>
         CreatedAt = submission.CreatedAt
     };
 
-    // Parse corrections and suggestions if available
     if (submission.Evaluated && !string.IsNullOrEmpty(submission.Feedback))
     {
         try
@@ -137,7 +125,7 @@ api.MapGet("submission/{id:int}/status", async (AppDbContext context, int id) =>
         }
         catch (JsonException)
         {
-            // Handle malformed JSON gracefully
+            throw;
         }
     }
 

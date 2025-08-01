@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Elezea.DTOs;
 
-public class SubmitImageDto
+public class SubmitDescriptionDto
 {
     [Required]
     public int ImageId { get; set; }

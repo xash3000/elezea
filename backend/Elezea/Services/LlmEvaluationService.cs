@@ -15,15 +15,14 @@ public class LlmEvaluationService : ILlmEvaluationService
     {
         _logger.LogInformation("Starting LLM evaluation for submission {SubmissionId}", submissionId);
 
-        // Placeholder implementation - simulate LLM processing time
+        // simulate LLM processing time
         await Task.Delay(TimeSpan.FromSeconds(20));
 
         // TODO: Replace with actual LLM API call
-        // This would typically call an external LLM service like OpenAI, Azure OpenAI, etc.
 
         var result = new LlmEvaluationResult
         {
-            Score = 0.85f, // Placeholder score
+            Score = 0.85f,
             Corrections = new List<List<string>>
             {
                 new() { "houze", "house" },
