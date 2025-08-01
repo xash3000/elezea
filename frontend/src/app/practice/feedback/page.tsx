@@ -7,13 +7,16 @@ interface FeedbackData {
   suggestions: string[];
 }
 
-export default function FeedbackPage({
+export default async function FeedbackPage({
   searchParams,
 }: {
-  searchParams: { text: string; theme: string };
+  searchParams: Promise<{ searchParamsText: string }>;
 }) {
+
+  const { searchParamsText = "" } = await searchParams;
+
   const feedback: FeedbackData = {
-    score: Math.min(100, Math.floor(searchParams.text.length * 0.8)),
+    score: Math.min(100, Math.floor(searchParamsText.length * 0.8)),
     corrections: [
       {
         original: "big",
@@ -66,7 +69,7 @@ export default function FeedbackPage({
 
             {/* Edit Your Description - Right */}
             <Link
-              href={`/practice?text=${encodeURIComponent(searchParams.text)}`}
+              href={`/practice?text=${encodeURIComponent(searchParamsText)}`}
               className="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors"
             >
               ✏️ Edit Your Description

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 export default function ImageGenerator() {
   const [imageUrl, setImageUrl] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
 
   // Enhanced fallback images
   const fallbackImages = [
@@ -17,7 +17,7 @@ export default function ImageGenerator() {
   const getRandomImage = async () => {
     try {
       setIsLoading(true);
-      setError(null);
+      setError("");
 
       // Use direct image URLs instead of the random endpoint
       const randomId = Math.floor(Math.random() * 1000);
