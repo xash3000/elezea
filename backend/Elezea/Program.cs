@@ -125,13 +125,14 @@ api.MapGet("submission/{id:int}/status", async (AppDbContext context, int id) =>
         }
         catch (JsonException)
         {
-            throw;
+            return Results.Problem("Failed to parse submission feedback", statusCode: StatusCodes.Status500InternalServerError);
         }
     }
 
     return Results.Ok(statusDto);
 }).Produces<SubmissionStatusDto>(StatusCodes.Status200OK)
 .Produces(StatusCodes.Status404NotFound)
+.Produces(StatusCodes.Status500InternalServerError)
 .WithOpenApi();
 
 app.Run();
