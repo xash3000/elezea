@@ -12,6 +12,7 @@ export default function PracticePage() {
 
   const [text, setText] = useState("");
   const [key, setKey] = useState(0);
+  const [imageId, setImageId] = useState<number | null>(null);
 
   useEffect(() => {
     if (initialText) {
@@ -22,11 +23,35 @@ export default function PracticePage() {
   const handleNewImage = () => {
     setKey((prevKey) => prevKey + 1);
     setText("");
+    setImageId(null); // reset imageId
   };
 
-  const handleSubmit = () => {
-    if (text.trim()) {
-      router.push(`/practice/feedback?text=${encodeURIComponent(text)}`);
+  const handleSubmit = async () => {
+    if (!text.trim() || imageId === null) return;
+
+    try {
+      const res = await fetch("https://localhost:7259/api/images/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageId,
+          userDescription: text,
+          langCode: "en", // adjust if needed
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("Failed to submit description");
+        return;
+      }
+
+      const data = await res.json();
+      const submissionId = data.id;
+
+      // ✅ Navigate with the submission ID
+      router.push(`/practice/feedback?submissionId=${submissionId}`);
+    } catch (error) {
+      console.error("Submit error:", error);
     }
   };
 
@@ -45,7 +70,7 @@ export default function PracticePage() {
           {/* Image Section */}
           <div className="flex flex-col gap-4 h-full">
             <div className="flex-1 rounded-2xl shadow-md overflow-hidden bg-gray-200 flex items-center justify-center">
-              <ImageGenerator key={key} />
+              <ImageGenerator key={key} onImageDataChange={(image) => setImageId(image.id)} />
             </div>
             <button
               onClick={handleNewImage}
@@ -60,7 +85,7 @@ export default function PracticePage() {
             <WritingArea value={text} onChange={setText} />
             <button
               onClick={handleSubmit}
-              disabled={!text.trim()}
+              disabled={!text.trim() || imageId === null}
               className="w-full px-4 py-3 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 disabled:opacity-50 transition-colors"
             >
               Submit for Feedback

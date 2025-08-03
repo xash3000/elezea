@@ -1,39 +1,80 @@
-import Link from "next/link";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import FeedbackCard from "@/components/FeedbackCard";
+import Link from "next/link";
 
 interface FeedbackData {
   score: number;
-  corrections: { original: string; improved: string; reason: string }[];
+  corrections: [string, string][];
   suggestions: string[];
+  isEvaluated: boolean;
 }
 
-export default async function FeedbackPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ searchParamsText: string }>;
-}) {
+export default function FeedbackPage() {
+  const searchParams = useSearchParams();
+  const submissionId = searchParams.get("submissionId");
+  const descriptionText = searchParams.get("text") || "";
 
-  const { searchParamsText = "" } = await searchParams;
+  const [feedback, setFeedback] = useState<FeedbackData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const feedback: FeedbackData = {
-    score: Math.min(100, Math.floor(searchParamsText.length * 0.8)),
-    corrections: [
-      {
-        original: "big",
-        improved: "spacious",
-        reason: "More descriptive adjective",
-      },
-      {
-        original: "is nice",
-        improved: "has a charming ambiance",
-        reason: "Rich vocabulary suggestion",
-      },
-    ],
-    suggestions: [
-      "Try adding more sensory details (sounds, smells)",
-      "Use past tense consistently throughout",
-    ],
-  };
+  useEffect(() => {
+    if (!submissionId) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const feedbackRes = await fetch(
+          `https://localhost:7259/api/submission/${submissionId}/status`
+        );
+
+        if (!feedbackRes.ok) {
+          throw new Error("Failed to fetch feedback.");
+        }
+
+        const feedbackData: FeedbackData = await feedbackRes.json();
+        console.log("Received feedback:", feedbackData);
+
+        if (feedbackData.isEvaluated) {
+          clearInterval(pollInterval);
+          setFeedback(feedbackData);
+          setLoading(false);
+        }
+      } catch (err) {
+        clearInterval(pollInterval);
+        setError("Error while fetching feedback.");
+        setLoading(false);
+      }
+    }, 500);
+
+    return () => clearInterval(pollInterval);
+  }, [submissionId ?? ""]); // <- ensure stable value
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-lg text-gray-700">
+        Evaluating your writing... ⏳
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600 font-bold">
+        {error}
+      </div>
+    );
+  }
+
+  if (!feedback) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600 font-bold">
+        No feedback received.
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center p-8">
@@ -42,16 +83,23 @@ export default async function FeedbackPage({
         <div className="bg-blue-600 p-6 text-white flex justify-center items-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold">Your Writing Score</h1>
-            <div className="text-5xl font-bold mt-2">{feedback.score}/100</div>
+            <div className="text-5xl font-bold mt-2">{Math.round(feedback.score * 100)}/100</div>
           </div>
         </div>
 
-        {/* Feedback and Buttons */}
+        {/* Feedback Body */}
         <div className="p-6">
-          <FeedbackCard {...feedback} />
+          <FeedbackCard
+            score={feedback.score}
+            corrections={feedback.corrections.map(([wrong, correct]) => ({
+              original: wrong,
+              improved: correct,
+              reason: "",
+            }))}
+            suggestions={feedback.suggestions}
+          />
 
           <div className="flex flex-col md:flex-row gap-4 mt-8 w-full">
-            {/* Back to Home - Left */}
             <Link
               href="/"
               className="flex-1 text-center border border-gray-300 hover:bg-gray-100 font-bold py-3 px-4 rounded-xl transition-colors"
@@ -59,7 +107,6 @@ export default async function FeedbackPage({
               🏠 Back to Home
             </Link>
 
-            {/* Try Another - Center */}
             <Link
               href="/practice"
               className="flex-1 text-center bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-3 px-4 rounded-xl transition-colors"
@@ -67,9 +114,8 @@ export default async function FeedbackPage({
               🖼️ Try Another
             </Link>
 
-            {/* Edit Your Description - Right */}
             <Link
-              href={`/practice?text=${encodeURIComponent(searchParamsText)}`}
+              href={`/practice?text=${encodeURIComponent(descriptionText)}`}
               className="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors"
             >
               ✏️ Edit Your Description
