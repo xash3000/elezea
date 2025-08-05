@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import FeedbackCard from "@/components/FeedbackCard";
 import Link from "next/link";
+import config from "@/config";
 
 interface FeedbackData {
   score: number;
@@ -27,7 +28,7 @@ export default function FeedbackPage() {
     const pollInterval = setInterval(async () => {
       try {
         const feedbackRes = await fetch(
-          `https://localhost:7259/api/submission/${submissionId}/status`
+          `${config.apiBaseUrl}/api/submission/${submissionId}/status`
         );
 
         if (!feedbackRes.ok) {

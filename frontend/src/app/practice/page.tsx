@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ImageGenerator from "@/components/ImageGenerator";
 import WritingArea from "@/components/WritingArea";
+import config from "@/config";
 
 export default function PracticePage() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function PracticePage() {
     if (!text.trim() || imageId === null) return;
 
     try {
-      const res = await fetch("https://localhost:7259/api/images/submit", {
+      const res = await fetch(`${config.apiBaseUrl}/api/images/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

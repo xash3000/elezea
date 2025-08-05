@@ -1,11 +1,14 @@
-// next.config.js
-module.exports = {
+// next.config.ts
+const nextConfig = {
   async rewrites() {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://localhost:7259';
     return [
       {
         source: "/api/proxy/:path*",
-        destination: "https://localhost:7259/api/:path*", // Backend URL
+        destination: `${apiBaseUrl}/api/:path*`, // Backend URL
       },
     ];
   },
 };
+
+export default nextConfig;
