@@ -1,5 +1,6 @@
 // ImageGenerator.tsx
 import { useEffect, useState } from "react";
+import config from "../config";
 
 type Props = {
   onImageDataChange: (image: { id: number; url: string }) => void;
@@ -21,7 +22,7 @@ export default function ImageGenerator({ onImageDataChange }: Props) {
     try {
       setIsLoading(true);
       setError("");
-      const res = await fetch("https://localhost:7259/api/images/random");
+      const res = await fetch(`${config.apiBaseUrl}/api/images/random`);
       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
       const data = await res.json();
       if (!data?.url || !data?.id) throw new Error("Invalid image data");

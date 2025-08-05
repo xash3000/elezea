@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import config from "../config";
 
 type SubmissionStatus = {
   id: number;
@@ -18,7 +19,7 @@ export default function StatusFetcher({ submissionId }: { submissionId: number }
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await fetch(`https://localhost:7259/api/submission/${submissionId}/status`);
+        const res = await fetch(`${config.apiBaseUrl}/api/submission/${submissionId}/status`);
         if (!res.ok) throw new Error(`Error ${res.status}`);
         const data = await res.json();
         setStatus(data);
