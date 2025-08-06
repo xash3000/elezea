@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Logging;
 using Elezea.Services;
 using Elezea.Models;
+using Elezea.Configuration;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +15,10 @@ builder.Logging
     .AddConsole()
     .AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning)
     .SetMinimumLevel(LogLevel.Information);
+
+// Configure Gemini AI options
+builder.Services.Configure<GeminiAIOptions>(
+    builder.Configuration.GetSection(GeminiAIOptions.SectionName));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
